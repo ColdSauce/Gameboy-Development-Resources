@@ -1,0 +1,845 @@
+How To Write a Simple Side Scrolling Game in GBDK Written Really Fucking Simply
+Version 1.2
+By Jason
+drunk-ass@beer.com
+
+Thanks go to Darren Reid and Chris Larken for the bug reports.
+
+Newbies have been seriously complaining lately about a lack of documents out there that explain to them what to do step by step. Personally, I think they're either looking for people to write the code for them or aren't smart enough to code. It's not a bad thing. I can't compose music or draw worth shit. Either way, here's another gift to all the coders out there.
+
+This is far from optimized. This is partially caused by myself creating bad code, and partially done to make it easier to describe what is going on.
+
+All information is valid with GBDK (SDCC) version 2.93.
+
+Procedure 1 - Make.bat
+
+Many people say you should plan your game before you code it. This is just stupid. If you waste time planning, you're not working. Not working means you're not being productive. You can always redo whatever you fuck up.
+You need a make.bat in order to compile your game. While there's plenty of ways to do this, include a make file, I prefer a make.bat due to the fact I like DOS and it's just easier that way.
+We make our make.bat using MS-DOS 6.22 Edit. We do not use notepad, as notepad will save it as make.bat.txt, which is not make.bat. Comprende?
+So let's look at our make.bat... 
+
+	echo off
+This line tells DOS to supress the lines written when the batch file is called.
+
+	d:\gbdk\bin\lcc -Wa-l -Wl-m -Wl-j -c -o newbie.o newbie.c
+This compiles the bank 0 C file newbie.c into a GBDK object file called newbie.o
+
+	d:\gbdk\bin\lcc -Wa-l -Wl-m -Wl-j -Wf-bo2 -c -o bank2.o bank2.c
+This compiles the bank 2 file bank2.c into a GBDK object file called bank2.o. Notice the 
+-Wf-bo2 flag. This is very important as it tells GBDK to put all the shit it compiles from this file into bank 2.
+
+	d:\gbdk\bin\lcc -Wa-l -Wl-m -Wl-j -Wf-bo3 -c -o bank3.o bank3.c
+This compiles the bank 3 file bank3.c into a GBDK object file called bank3.o. Notice the 
+-Wf-bo3 flag. This is very important as it tells GBDK to put all the shit it compiles from this file into bank 3.
+
+	d:\gbdk\bin\lcc -Wa-l -Wl-m -Wl-j -Wl-yt0x01 -Wl-yo4 -Wl-yp0x143=0x80 -o newbie.gbc newbie.o bank2.o bank3.o
+This builds the actual ROM image, newbie.gbc from the object files newbie.o, bank2.o, and bank3.o. 
+The -Wl-yt0x01 indicates which cartridge type we will be using. We picked 0x01, or a ROM + MBC 1 memory controller. Select one from the following table taken from Pan of Anthrox's GBSPEC.TXT.
+0147 Cartridge type: 
+0 - ROM ONLY			12 - ROM+MBC3+RAM
+1 - ROM+MBC1			13 - ROM+MBC3+RAM+BATT 
+2 - ROM+MBC1+RAM 		19 - ROM+MBC5 
+3 - ROM+MBC1+RAM+BATT 	1A - ROM+MBC5+RAM 
+5 - ROM+MBC2 			1B - ROM+MBC5+RAM+BATT 
+6 - ROM+MBC2+BATTERY 	1C - ROM+MBC5+RUMBLE 
+8 - ROM+RAM 			1D - ROM+MBC5+RUMBLE+SRAM 
+9 - ROM+RAM+BATTERY 		1E - ROM+MBC5+RUMBLE+SRAM+BATT 
+B - ROM+MMM01 			1F - Pocket Camera 
+
+The -Wl-yp0x143=0x80 indicates that this will be a Gameboy Color compatible title. replacing 0x80 with 0xC0 will indicate a Gameboy Color Only title, and 0x00 will represent everything else. 
+The -Wl-yo4 indicates how many ROM banks we will be using. We selected 4, thus equalling a 64 kilobyte ROM. The following are common bank sizes taken from Pan of Anthrox's GBSPEC.TXT.
+	256Kbit = 32KByte = 2 banks 
+	512Kbit = 64KByte = 4 banks 
+	1Mbit = 128KByte = 8 banks 
+	2Mbit = 256KByte = 16 banks 
+	4Mbit = 512KByte = 32 banks 
+	8Mbit = 1MByte = 64 banks 
+	16Mbit = 2MByte = 128 banks 
+
+
+	pause
+This DOS command waits until a key is pressed before continuing. This allows us to see any errors if applicable.
+
+	d:\no\dboy d:\gbdev\newbie\newbie.gbc
+This runs the ROM newbie.gbc with the emulator DBOY. This allows us to test the rom to see if it does what it is supposed to.
+
+	cd d:\gbdev\newbie
+This makes sure that the directory the batch file ends up at is d:\gbdev\newbie. No$gmb changes the directory if it was selected over dboy above.
+
+	d:
+This switches the drive to D:, which is a secondary 540 meg harddrive in my computer that is dedicated to gameboy development.
+
+	del *.lst         
+This deletes the .LST files since I don't use them, thus freeing up disk space.
+
+And that completes your make.bat file. Good for you!
+
+Procedure 2 - GBTK
+
+1) Start Megaman X's Gameboy Toolkit. (Version used V0.013A)
+2) There is a big rectangle entitled Source. Click on there and an Open File dialogue will appear.
+3) Load whatever picture you want to load by finding it on your computer, highlighting it, and double clicking it.
+4) We need to make it so that it is under 256 tiles. This is because the original gameboy's hardware only supports 256 tiles at a time loaded into video RAM. There is a work around for the Gameboy Color only, however this is just a beginner document, so we will not go into detail about it. A good size would be either 18x13 or 13x18, both use ~234 tiles. Multiplied out that is either 144x104 or 104x144 of the Gameboy's 160x144 display.  In the upper right corner is a section entitled Picture/Video Size. The 3rd Radio Button allows you to enter your size. The first box is for the X, the second box is for the Y. For our sake we'll use 104x144. Click the 3rd Radio Dial. Fill in the boxes. Click the unmarked gray box directly to the right of the 2 size boxes.
+5) If the picture does not look perfect, adjust it by moving the dials in the GameBoy Thresholds.
+6) When satisfied, click File.
+7) Click Save As.
+8) Change the Save As Type to Gameboy Development Kit (*.h)
+9) Change the directory to your project directory.
+10) Type in titlepic.h
+11) Click Save.
+
+ 
+
+Procedure 3 - GBTD
+
+Background Tile
+1) Launch Gameboy Tile Designer
+2) With Tile 0, draw the tile that you want to fill the screen with during gameplay.
+3) Click on File.
+4) Click on Export To....
+5) Under File [ Type ] Select GBDK C file (*.c)
+6) In the File [ Filename ] Type in the path to your project and bgtile.c
+7) Under Settings [ Label ] Type in BGTile
+8) Click OK
+9) Click File.
+10) Click Export.
+
+ 
+
+Sprite Tiles
+1) Launch Gameboy Tile Designer
+2) With Tile 0, draw the tile that you want for the player.
+3) With Tile 1 (click on the white box next to the 1 right below the small graphic containing the picture of the player with the number 0 next to it.), draw the BadGuy.
+4) With Tile 2 (click on the white box next to the 2 right below the small graphic containing the picture of the BadGuy with the number 1 next to it.), draw the Player's Shot.
+5) Click on File.
+6) Click on Export To....
+7) Under File [ Type ] Select GBDK C file (*.c)
+8) In the File [ Filename ] Type in the path to your project and sprtiles.c
+9) Under Settings [ Label ] Type in SpriteTiles
+10) Here's the difference. Where it says Settings [ From ] [0] to [0], change the 2nd zero to a two so it reads Settings [ From ] [0] to [2].
+10) Click OK
+11) Click File.
+12) Click Export.
+
+ 
+
+Procedure 4 - Enemy AI
+
+Enemy AI can easily be accomplished using Pan of Anthrox's Roller Coaster v.1.3. 
+1) Start Roller Coaster.
+2) Fill in the following information.
+	Start Angle is the beginning of the sine wave.
+	End Angle is the end angle of the sine wave.
+	# of values is the number of positions to make on the wave.
+	Min. Value is the minimum value the variable can equal.
+	Max. Value is the maximum value the variable can equal.
+		For the sake of our demonstration, we will use the default configuration.
+3) Under the A section, press Sine. A sine wave should be created. 
+4) Under the C section, press A. The sine wave should be recreated in the C window.
+5) Click on the Save To Clipboard button.
+
+ 
+Figure 1 - Rollercoaster
+
+6) Open up bank2.c
+7) Paste in the data you copied to the clipboard.
+8) Save bank2.c
+9) Close Rollercoaster.
+
+
+Procedure 5 - Newbie.C
+
+As easy as above seems, that's not programming. That's a batch file. You can't make a game from just a batch file.
+
+Enter Newbie.C
+We have already established that this game will be 4 banks. Bank 0 is nonswitchable, so we want to try and keep this bank as uncluttered as possible. We will stash the game engine itself inside of bank 02, and try to get all the games data- graphic tiles and the non-game engine like inside of bank 03. 
+Time to get coding.
+
+We need to include our header files.
+
+	#include <gb\gb.h>
+If you don't know what #include means, you shouldn't be reading this. Includes open another file for integration into the current c file. The header file gb.h contains gameboy specific routines.
+
+	#include <rand.h>
+If you don't know what #include means, you shouldn't be reading this. Includes open another file for integration into the current c file. The header file rand.h contains routines for generating random numbers.
+
+We now need to list our procedures. We define them in bank 0 so that we can access them from bank 0 if we are so inclined to do so.
+
+	// bank 0
+This line is just commentary. It tells us that the following procedures are located inside bank 0. 
+
+	void vblint(void);
+This line defines our vertical blank interrupt handler.
+
+	// bank 2
+This line is just commentary. It tells us that the following procedures are located inside bank 2. This helps us later on, since bankswitching is not automatic with GBDK.
+
+	void UpdateGraphics(void);
+This routine updates all the sprites and the background. It is located inside of bank 2, so bank 2 must be selected before you call it.
+
+	void DoGameplay(void);
+The game's actual gameplay lies inside of here.
+
+	void UpdateJoypad(void);
+This procedure reads the joypad, and reacts to the gameplay accordingly.
+
+	void UpdateBadGuy(void);
+This procedure updates the Bad Guy.
+
+	void CollisionDetection(void);
+This procedure checks to make sure no sprites have collided, and does action if sprites have.
+
+
+	// bank 3
+This line is just commentary. It tells us that the following procedures are located inside bank 3. This helps us later on, since bankswitching is not automatic with GBDK.
+
+	void DrawTitleScreen(void);
+The first procedure in bank 3 is DrawTitleScreen. As you can hopefully guess, this procedure draws the title screen.
+
+	void LoadGameTiles(void);
+This procedure loads the game's tiles from bank 3 into the gameboy's video ram so that we may access them later on during the game.
+
+We now need to list our variables.
+
+	fixed seed;
+This creates a fixed (data type) seed (name) used for random number generation. Don't think too much, just cut and paste.
+
+Time to start coding the actual procedures.
+
+	main()
+This creates the main procedure. The main procedure is what is called at the beginning of the ROM.
+
+	{
+This { thing. No. I'm not going to describe this every time I have to. But I will describe this once. This thing is what signifies the start of a section of code specific to the line preceding it.
+
+First we will do what has to be initialized.
+
+		seed.b.l = DIV_REG;
+This line loads whatever is in the DIV_REG into seed.b.l. This is for random number generation. Don't worry too much about it.
+
+Now let us display our title screen. 
+
+		SWITCH_ROM_MBC1(3);
+This line switches the memory bank controller to bank 3, which contains our data.
+
+		DrawTitleScreen();
+That draws the title screen. It's that simple. At least for bank 0.
+
+Now prepare to get the game playing.
+
+		seed.b.h = DIV_REG;
+Load DIV_REG into seed.b.h. For Random number generation.
+
+		initrand(seed.w);
+Initialize the random number generator.
+
+		LoadGameTiles();
+This procedure loads the tiles from bank 3 that we want to use in our game located in bank 2.
+
+		disable_interrupts();
+This prevents interrupts from happening until an enable_interrupts(); is called.
+
+		add_VBL(vblint);
+This adds our procedure void vblint(void); as the VBL interrupt handler, so that when a vblank interrupt is triggered, the CPU jumps to that procedure.
+
+		SWITCH_ROM_MBC1(2);
+This line switches the memory bank controller to bank 2, which contains our game code.
+
+		DoGameplay();
+This procedure plays the game. Seeing as how it is in bank 2, we called the SWITCH_ROM_MBC1(bank #2); above.
+
+
+		reset();
+This line resets the gameboy. This is much nicer than having the gameboy color just crash.
+
+	}
+Remember our friend {? This line does the opposite, completing the section of code.
+
+Now we code our void vblint(void); and any other previously defined bank 0 procedures.
+
+	void vblint(void)
+Tell the compiler that we are starting code on the section for vblint.
+
+	{
+
+		SWITCH_ROM_MBC1(2);
+Make sure that we are switched to Bank 2, since this is our game code bank.
+
+		UpdateGraphics();
+Call the graphical update. We do this during vertical blank since it is the time that the screen is not being updated. Otherwise graphical errors are bound to happen since you are updating the areas while you are coding.
+
+	}
+End vblint.
+
+And thus ends bank 0. There is still plenty of space free, so if we ever want to add more to the game, such as interrupt-driven routines, we have room.
+
+Procedure 6 - Bank02.C
+
+	#include <gb\gb.h>
+First thing to do is to include gb.h
+
+	#include <rand.h>
+And rand.h
+
+When we open this, we start out with this (or a variant if the options were tweaked) that we pasted in from Pan's RollerCoaster.
+
+db  32,  32,  33,  34,  35,  35,  36,  37
+db  38,  38,  39,  40,  41,  41,  42,  43
+db  44,  44,  45,  46,  46,  47,  48,  48
+db  49,  50,  50,  51,  51,  52,  53,  53
+db  54,  54,  55,  55,  56,  56,  57,  57
+db  58,  58,  58,  59,  59,  60,  60,  60
+db  61,  61,  61,  61,  62,  62,  62,  62
+db  62,  63,  63,  63,  63,  63,  63,  63
+db  63,  63,  63,  63,  63,  63,  63,  63
+db  62,  62,  62,  62,  62,  61,  61,  61
+db  61,  60,  60,  60,  59,  59,  59,  58
+db  58,  57,  57,  56,  56,  55,  55,  54
+db  54,  53,  53,  52,  52,  51,  50,  50
+db  49,  49,  48,  47,  47,  46,  45,  44
+db  44,  43,  42,  42,  41,  40,  39,  39
+db  38,  37,  36,  36,  35,  34,  33,  33
+db  32,  31,  30,  29,  29,  28,  27,  26
+db  26,  25,  24,  23,  23,  22,  21,  20
+db  20,  19,  18,  18,  17,  16,  16,  15
+db  14,  14,  13,  12,  12,  11,  11,  10
+db  9,  9,  8,  8,  7,  7,  6,  6
+db  6,  5,  5,  4,  4,  4,  3,  3
+db  3,  2,  2,  2,  1,  1,  1,  1
+db  1,  1,  0,  0,  0,  0,  0,  0
+db  0,  0,  0,  0,  0,  0,  0,  0
+db  1,  1,  1,  1,  1,  1,  2,  2
+db  2,  3,  3,  3,  4,  4,  4,  5
+db  5,  5,  6,  6,  7,  7,  8,  8
+db  9,  9,  10,  11,  11,  12,  12,  13
+db  14,  14,  15,  16,  16,  17,  18,  18
+db  19,  20,  20,  21,  22,  23,  23,  24
+db  25,  26,  26,  27,  28,  29,  29,  30
+
+Now we need to change this into C code.
+
+	const UBYTE EnemyAI[] = {
+First write this line that defines a constant (unchangeable by program. This saves alot of RAM later on.) unsigned byte array called EnemyAI.
+	32,  32,  33,  34,  35,  35,  36,  37,
+Remove all the dbs. Add a comma to the end
+	38,  38,  39,  40,  41,  41,  42,  43,
+Remove all the dbs. Add a comma to the end
+	44,  44,  45,  46,  46,  47,  48,  48,
+Remove all the dbs. Add a comma to the end
+	49,  50,  50,  51,  51,  52,  53,  53,
+Remove all the dbs. Add a comma to the end
+	54,  54,  55,  55,  56,  56,  57,  57,
+Remove all the dbs. Add a comma to the end
+	58,  58,  58,  59,  59,  60,  60,  60,
+Remove all the dbs. Add a comma to the end
+	61,  61,  61,  61,  62,  62,  62,  62,
+Remove all the dbs. Add a comma to the end
+	62,  63,  63,  63,  63,  63,  63,  63,
+Remove all the dbs. Add a comma to the end
+	63,  63,  63,  63,  63,  63,  63,  63,
+Remove all the dbs. Add a comma to the end
+	62,  62,  62,  62,  62,  61,  61,  61,
+Remove all the dbs. Add a comma to the end
+	61,  60,  60,  60,  59,  59,  59,  58,
+Remove all the dbs. Add a comma to the end
+	58,  57,  57,  56,  56,  55,  55,  54,
+Remove all the dbs. Add a comma to the end
+	54,  53,  53,  52,  52,  51,  50,  50,
+Remove all the dbs. Add a comma to the end
+	49,  49,  48,  47,  47,  46,  45,  44,
+Remove all the dbs. Add a comma to the end
+	44,  43,  42,  42,  41,  40,  39,  39,
+Remove all the dbs. Add a comma to the end
+	38,  37,  36,  36,  35,  34,  33,  33,
+Remove all the dbs. Add a comma to the end
+	32,  31,  30,  29,  29,  28,  27,  26,
+Remove all the dbs. Add a comma to the end
+	26,  25,  24,  23,  23,  22,  21,  20,
+Remove all the dbs. Add a comma to the end
+	20,  19,  18,  18,  17,  16,  16,  15,
+Remove all the dbs. Add a comma to the end
+	14,  14,  13,  12,  12,  11,  11,  10,
+Remove all the dbs. Add a comma to the end
+	9,  9,  8,  8,  7,  7,  6,  6,
+Remove all the dbs. Add a comma to the end
+	6,  5,  5,  4,  4,  4,  3,  3,
+Remove all the dbs. Add a comma to the end
+	3,  2,  2,  2,  1,  1,  1,  1,
+Remove all the dbs. Add a comma to the end
+	1,  1,  0,  0,  0,  0,  0,  0,
+Remove all the dbs. Add a comma to the end
+	0,  0,  0,  0,  0,  0,  0,  0,
+Remove all the dbs. Add a comma to the end
+	1,  1,  1,  1,  1,  1,  2,  2,
+Remove all the dbs. Add a comma to the end
+	2,  3,  3,  3,  4,  4,  4,  5,
+Remove all the dbs. Add a comma to the end
+	5,  5,  6,  6,  7,  7,  8,  8,
+Remove all the dbs. Add a comma to the end
+	9,  9,  10,  11,  11,  12,  12,  13,
+Remove all the dbs. Add a comma to the end
+	14,  14,  15,  16,  16,  17,  18,  18,
+Remove all the dbs. Add a comma to the end
+	19,  20,  20,  21,  22,  23,  23,  24,
+Remove all the dbs. Add a comma to the end
+	25,  26,  26,  27,  28,  29,  29,  30,
+Remove all the dbs. Add a comma to the end
+	};
+End EnemyAI
+
+	UBYTE Playing, Joy;
+UBYTEs are unsigned 8 bit variables capable of a number between 0 and 255, or 0x00 to 0xFF hex. Playing determines whether or not the game is playing. Joy is the unsigned byte that we will be using to read the joypad and see if the pad is pressed in a certain direction.
+
+	UBYTE PlayerX, PlayerY;
+UBYTEs are unsigned 8 bit variables capable of a number between 0 and 255, or 0x00 to 0xFF hex. PlayerX refers to the Player's X coordinates. PlayerY refers to the Player's Y coordinates.
+
+	UBYTE BadGuyX, BadGuyY, BadGuyZ, BadGuyOffset;
+UBYTEs are unsigned 8 bit variables capable of a number between 0 and 255, or 0x00 to 0xFF hex. BadGuyX refers to the Bad Guy's X coordinates. BadGuyY refers to the Bad Guy's Y coordinates. BadGuyZ will be the spot in reference to where he is AI wise. BadGuyOffset is the Y offset for the AI.
+
+	UBYTE PlayerShotX, PlayerShotY, PlayerShotZ;
+UBYTEs are unsigned 8 bit variables capable of a number between 0 and 255, or 0x00 to 0xFF hex. PlayerShotX refers to the Player's Shot's X coordinates. PlayerShotY refers to the Player's Shot's Y coordinates. PlayerShotZ determines whether or not the player has shot.
+
+
+	void UpdateGraphics(void)
+This routine is the routine that updates the graphics the player sees on the screen. It is called by the VBLINT handling routine, so every vblint the graphics are updated.
+
+	{
+		disable_interrupts();
+Disable the interrupts. This way if another interrupt occurs, we will not lose our place inside the vblint.
+
+		scroll_bkg(1,0);
+This moves the background 1 pixel on the X-axis. By doing this, the background scrolls continually.
+
+		move_sprite(0,PlayerX,PlayerY);
+This moves the player's sprite to its current X-Y axis.
+
+		move_sprite(1,BadGuyX,BadGuyY);
+This moves the Bad Guy's sprite to its current X-Y axis.
+
+		move_sprite(2,PlayerShotX,PlayerShotY);
+This moves the Player's Shots' sprite to its current X-Y axis.
+
+		enable_interrupts();
+This enables interrupts so that come next vblint, the vblint handler will be called which will call this.
+
+	}
+End UpdateGraphics.
+
+
+	void DoGameplay(void)
+this procedure contains the gameplay loop.
+	{
+		playing = 1;
+Sets the UBYTE playing to 1, indicating that the game is playing.
+
+		while(playing == 1) {
+This starts a loop so that while playing is equal to 1, the loop will continue to loop. If playing does not equal 1, the loop will stop.
+
+Repeat the following steps for the game to play.
+
+			UpdateJoypad();
+This procedure checks the joypad, and moves the players ship according to the results. It also updates the player's shot, if it has been shot, for lack of a better place of sticking it.
+
+			UpdateBadGuy();
+This procedure moves the enemy.
+			
+			CollisionDetection();
+This is one of the most important procedures. It checks to see if the player has collided with the enemy, along with the player's shot colliding with the badguy.
+	
+			delay(10);
+This is the game's master speed control. It doesn't affect the background scrolling, but does affect the badguy's speed, as well as how responsive the controls are.
+
+		}
+end while loop
+
+	}
+End DoGameplay.
+
+	void UpdateJoypad(void)
+Begin the code for the checking the joypad.
+	{
+		Joy = joypad();
+Read the joypad. Store what we read into unsigned byte Joy.
+
+Now there's 2 ways you can do this. A switch is more efficient, but for ease of use we will use ifs.
+
+		if(Joy & J_LEFT) {
+J_LEFT is defined in gb.h. Joy is the returned buttons pressed byte. If the bit defined by J_LEFT and the corresponding bit in Joy are both 1, then the if statement is true, thus all the code in the {} brackets will be ran.
+
+			if(PlayerX > 0) PlayerX--;
+This checks to make sure that the PlayerX can be decreased without making the sprite go completely off of the screen. The number 0 might need to be replaced with a different number such as 8 in order to keep the sprite on screen. 
+
+		}
+End IF Joy & J_LEFT statement.
+
+		if(Joy & J_RIGHT) {
+J_RIGHT is defined in gb.h. Joy is the returned buttons pressed byte. If the bit defined by J_RIGHT and the corresponding bit in Joy are both 1, then the if statement is true, thus all the code in the {} brackets will be ran.
+
+			if(PlayerX < 152) PlayerX++;
+This checks to make sure that the PlayerX can be increased without making the sprite go completely off of the screen. The number 152 might need to be replaced with a different number such as 160 in order to keep the sprite on screen. 
+
+		}
+End IF Joy & J_RIGHT statement.
+
+		if(Joy & J_UP) {
+J_UP is defined in gb.h. Joy is the returned buttons pressed byte. If the bit defined by J_UP and the corresponding bit in Joy are both 1, then the if statement is true, thus all the code in the {} brackets will be ran.
+
+			if(PlayerY > 0) PlayerY --; 
+This checks to make sure that the PlayerY can be decreased without making the sprite go completely off of the screen. The number 0 might need to be replaced with a different number such as 8 in order to keep the sprite on screen. 
+
+		}
+End IF Joy & J_UP statement.
+
+
+		if(Joy & J_DOWN) {
+J_DOWN is defined in gb.h. Joy is the returned buttons pressed byte. If the bit defined by J_DOWN and the corresponding bit in Joy are both 1, then the if statement is true, thus all the code in the {} brackets will be ran.
+
+			if(PlayerY < 136) PlayerY++;
+This checks to make sure that the PlayerY can be increased without making the sprite go completely off of the screen. The number 136 might need to be replaced with a different number such as 144 in order to keep the sprite on screen. 
+
+		}
+End IF Joy & J_DOWN statement.
+
+		if(Joy & J_A) {
+J_A is defined in gb.h. Joy is the returned buttons pressed byte. If the bit defined by J_A and the corresponding bit in Joy are both 1, then the if statement is true, thus all the code in the {} brackets will be ran.
+
+			if(PlayerShotZ == 0) {
+This checks to see if a shot has been fired. If there is no shot being shot, then you can go ahead and shoot.
+
+				PlayerShotZ = 1;
+This is done to signify that a shot has been fired.
+
+				PlayerShotX = PlayerX;
+This is done to move the shot to where the player is. Since the player has a lower sprite number (zero as opposed to two for the shot), the player is drawn on top of the shot, thus making it look like the shot is coming from the player.
+
+				PlayerShotY = PlayerY;
+This is done to move the shot to where the player is. Since the player has a lower sprite number (zero as opposed to two for the shot), the player is drawn on top of the shot, thus making it look like the shot is coming from the player.
+
+			}
+End if PlayerShotZ = 0 statement.
+
+		}
+End if Joy & J_A statement.
+
+		if(PlayerShotZ == 1) {
+If the player has shot, do the following.
+
+			PlayerShotX = PlayerShotX + 2;
+Increase the Player's Shot's X axis by 2 in order to make the bullet faster than the player.
+
+			if(PlayerShotX > 240) {
+If the shot has moved past the 240 mark, do the following.
+
+				PlayerShotX = 250;
+This moves the sprite off of the screen so that a stationary bullet is not displayed on the gameboy.
+
+				PlayerShotY = 250;
+This moves the sprite off of the screen so that a stationary bullet is not displayed on the gameboy.
+
+				PlayerShotZ = 0;
+This tells the game that the player has not shot. The reset in PlayerShotZ allows the player to shoot come next game loop call if A is being pressed.
+
+			}
+End if PlayerShotX > 240 statement.
+
+		}
+End if PlayerShotZ = 1 statement.
+		
+	}
+End UpdateJoypad
+
+	void UpdateBadGuy(void)
+This routine updates the BadGuy so he's not a gay stationary object.
+	{
+		BadGuyX = BadGuyX - 1;
+Decrease the BadGuy's X coordinate.
+		if(BadGuyX > 240) {
+When the BadGuyX counter is decreased from 0, it resets to 255. When this happens, do the following.
+
+			BadGuyOffset = rand();
+Load a random number into the BadGuy's AI Offset.
+
+			while(BadGuyOffset > 134) {
+Loop until we get a BadGuyY that is less than 134 (so we see the badguy).
+
+				BadGuyOffset = rand();
+Load a random number into the BadGuy's AI Offset.
+
+			}
+End while BadGuyY > 134 loop
+
+			BadGuyX = 239;
+Move the BadGuy's X axis so that the greater than 240 does not keep getting called.
+
+		}
+End BadGuyX > 240 Loop 
+
+		BadGuyY = BadGuyOffset + BadGuyAI[BadGuyZ];
+Load the new BadGuyY. Do this by taking the Offset value and adding the current AI value to it. This creates the sine wave effect we used RollerCoaster to create.
+
+		BadGuyZ++;
+Increase the BadGuyAI counter.
+	}
+End UpdateBadGuy
+
+	void CollisionDetection(void)
+Check to see if sprites collide
+	{
+
+The following set numbers in each if statement (the 4) need to be adjusted depending on how the sprites are drawn.
+
+		if(PlayerShotY > BadGuyY - 4) {
+Check to see if the Y axis is great enough to trigger a collision.
+
+			if(PlayerShotY < BadGuyY + 4) {
+Check to see if the Y axis is small enough to trigger a collision.
+
+				if(PlayerShotX > BadGuyX - 4) {
+Check to see if the X axis is great enough to trigger a collision.
+					if(PlayerShotX < BadGuyX + 4) {
+Check to see if the X axis is small enough to trigger a collision.
+
+If all of these have occured, we have a hit.
+						PlayerShotZ = 0;
+Reset the unsigned byte that determines if the player has shot or not.
+
+						PlayerShotX = 250;
+Move the Player's Shot's X axis off of the screen.
+
+						PlayerShotY = 250;
+Move the Player's Shot's Y axis off of the screen.
+
+						EnemyX = 255;		
+Move the Enemy's X axis so that it is far enough off of the screen that the next UpdateBadguy will reset it.
+
+					}
+End if PlayerShotX < BadGuyX + 4
+				}
+End if PlayerShotX > BadGuyX - 4
+
+			}
+End if PlayerShotY < BadGuyY + 4
+
+		}
+ End If PlayerShotY > BadguyY - 4 Statement
+
+
+		if(PlayerY > BadGuyY - 4) {
+Check to see if the Y axis is great enough to trigger a collision.
+
+			if(PlayerY < BadGuyY + 4) {
+Check to see if the Y axis is small enough to trigger a collision.
+
+				if(PlayerX > BadGuyX - 4) {
+Check to see if the X axis is great enough to trigger a collision.
+					if(PlayerX < BadGuyX + 4) {
+Check to see if the X axis is small enough to trigger a collision.
+
+If all of these have occured, we have a hit.
+						Playing = 0;
+A collision with your ship has occured. Thus you are dead, and the game ceases to play.
+
+					}
+End if PlayerShotX < BadGuyX + 4
+				}
+End if PlayerShotX > BadGuyX - 4
+
+			}
+End if PlayerShotY < BadGuyY + 4
+
+		}
+ End If PlayerShotY > BadguyY - 4 Statement
+
+
+	}
+End CollisionDetection
+
+Procedure 7 - Bank03.C
+
+The game is done. The only thing we have left really is all the data to load into a bank, and to display the title picture.
+
+	#include <gb\gb.h>
+Include gb.h. We can skip rand.h since we aren't going to be calling random numbers.
+
+	#include "titlepic.h"
+This loads the information we converted with GBTK.
+
+	#include "bgtile.c"
+This loads the background tile we drew with GBTD.
+
+	#include "sprtiles.c"
+This loads the sprite tiles we drew with GBTD.
+
+	const UBYTE gamemap[] = {
+const to save ram, unsigned byte, gamemap is its name. This is used to clear the map of the title screen data.
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	};
+
+	const UWORD titlepal[] = {
+The palette to load for the title screen. It is constant to save on ram, UWORD as in unsigned 16 bit data type, and titlepal is its name.
+		RGB(0,0,0),RGB(10,10,10),RGB(20,20,20),RGB(30,30,30),
+RGB is a color define. The first number refers to red, 2nd green, 3rd blue. so RGB(red,green,blue), where the values can be anywhere from 0 to 31.
+	};
+end titlepal
+
+	const UWORD bgpal[] = {
+The palette to load for the background of the game. It is constant to save on ram, UWORD as in unsigned 16 bit data type, and bgpal is its name.
+		RGB(0,0,0),RGB(10,10,10),RGB(20,20,20),RGB(30,30,30),
+RGB is a color define. The first number refers to red, 2nd green, 3rd blue. so RGB(red,green,blue), where the values can be anywhere from 0 to 31.
+	};
+end titlepal
+
+	const UWORD spritepal[] = {
+The palette to load for the game's sprites. It is constant to save on ram, UWORD as in unsigned 16 bit data type, and spritepal is its name.
+		RGB(0,0,0),RGB(10,10,10),RGB(20,20,20),RGB(30,30,30),
+RGB is a color define. The first number refers to red, 2nd green, 3rd blue. so RGB(red,green,blue), where the values can be anywhere from 0 to 31.
+	};
+end titlepal
+
+	void DrawTitleScreen(void)
+Time to display the title screen, and wait until a button is pressed.
+
+	{
+
+		wait_vbl_done();
+Wait until the screen is not being updated.
+
+		DISPLAY_OFF;
+Turn the display off.
+
+		set_bkg_data(0,235,title_tiledata);
+Set the background tile data so that it loads from the title_tiledata from title.h. The 0 indicates the tile to start with. The 235 indicates how many tiles to load, and the title_tiledata tells where to load the tiles from.
+
+		set_bkg_tiles(2,0,13,18,title_tilemap);
+Set the background tile map so that it displays the title_tilemap from title.h. The 2 shows where to start displaying the tiles from x-wise. the 0 shows where to start drawing the title picture from y-wise. The 13 shows how many tiles horizontally to draw. The 18 shows how many tiles vertically to draw. title_tilemap tells it where to load the map from.
+
+		set_bkg_palette(0,1,&titlepal[0]);
+set_bkg_palette sets the background palette. the 0 states to start with palette # 0. the 1 states to load 1 palette. the &titlepal[0] states to load the palette from titlepal.
+
+		SHOW_BKG;
+Show the background.
+
+		HIDE_WIN;
+Hide the window since we are not using it.
+
+		HIDE_SPRITES;
+Hide the sprites since we are not using them.
+
+		wait_vbl_done();
+Wait until the screen is not being updated.
+
+		DISPLAY_ON;
+Turn the display on.
+
+		waitpad(255);
+Wait until anything is pressed. 255 is all 8 bits, which means if any of the 8 buttons on the gameboy are pressed, continue.
+
+	}
+End DrawTitleScreen
+
+	void LoadGameTiles(void)
+Load the game's data.
+	{
+		wait_vbl_done();
+Wait until the gameboy is not updating the display.
+
+		DISPLAY_OFF;
+Turn the display off.
+
+		set_bkg_data(0,1,BGTile);
+Set the background data to load the 1 bg tile. 0 = start tile, 1 = tiles to load, bgtile = where to load tile from.
+
+		set_bkg_tiles(0,0,32,32,gamemap);
+Set the background map to clear it of everything. 0 = x start, 0 = y start, 32 = width, 32 = height.
+
+		set_bkg_palette(0,1,&bgpal[0]);
+Set the background palette to the game's palette. 0 = start palette, 1 = palettes to load. &bgpal[0] = where to load palette from.
+
+		set_sprite_data(0,3,SpriteTiles);
+Load the sprite tiles. 0 = first tile. 3 = tiles to load. SpriteTiles = where to load tiles from
+
+		set_sprite_tile(0,0);
+Set display-sprite #0 to sprite-in-ram # 0
+
+		set_sprite_tile(1,1);
+Set display-sprite #1 to sprite-in-ram # 1
+
+		set_sprite_tile(2,2);
+Set display-sprite #2 to sprite-in-ram # 2
+
+		SPRITES_8x8;
+Use 8x8 sprites.
+
+		SHOW_SPRITES;
+Show the sprites.
+
+		SHOW_BKG;
+Show the background.
+
+		DISPLAY_ON;
+Turn the display on.
+
+	}
+
+Now, we are done coding, however we need to open up the following files -
+	TITLEPIC.H
+	BGTILE.C
+	SPRTILES.C
+
+	In TITLEPIC.H -
+Find where it says
+	unsigned char titlepic_tiledata[] = {
+and change it to
+	const unsigned char titlepic_tiledata[] = {
+And then find
+	unsigned char titlepic_tilemap[] = {
+and change it to
+	const unsigned char titlepic_tilemap[] = {
+
+	In BGTILE.C
+Find where it says
+	unsigned char BGTile[] = {
+and change it to
+	const unsigned char BGTile[] = {
+
+	In SPRTILES.C
+Find where it says
+	unsigned char SpriteTiles[] = {
+and change it to
+	const unsigned char SpriteTiles[] = {
+
+
+Procedure 8 - Compile and assemble the ROM
+
+This is the easiest procedure. Since we already have a make.bat file, run it. And if you did everything correctly, you should have a lame little sidescroller ROM compiled. Enjoy.
